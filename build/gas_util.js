@@ -1,5 +1,5 @@
 if(!gas_util) {
-  gas_util = {};
+  var gas_util = {};
 }
 function getListFromSheet(sheetName) {
   var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
@@ -28,7 +28,7 @@ function getMapFromSheet(sheetName, pkey) {
 gas_util.getListFromSheet = getListFromSheet;
 gas_util.getMapFromSheet = getMapFromSheet;
 if(!gas_util) {
-  gas_util = {};
+  var gas_util = {};
 }
 function createChatworkClient(token) {
   var header = {'X-ChatWorkToken' : token };
@@ -62,7 +62,7 @@ function createChatworkClient(token) {
 }
 gas_util.createChatworkClient = createChatworkClient;
 if(!gas_util) {
-  gas_util = {};
+  var gas_util = {};
 }
 function searchMail(searchText) {
   var numMail = 500;// 1度に取得するメール数
