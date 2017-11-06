@@ -18,4 +18,12 @@ function getListFromSheet(sheetName) {
   }
   return ary;
 }
+function getMapFromSheet(sheetName, pkey) {
+  return getListFromSheet(sheetName).reduce(function(memo, v) {
+    memo[v[pkey]] = v;
+    return memo;
+  }, {});
+}
+
 gas_util.getListFromSheet = getListFromSheet;
+gas_util.getMapFromSheet = getMapFromSheet;
