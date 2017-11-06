@@ -1,5 +1,5 @@
 if(!gas_util) {
-  gas_util = {};
+  var gas_util = {};
 }
 function createChatworkClient(token) {
   var header = {'X-ChatWorkToken' : token };

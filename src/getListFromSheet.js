@@ -1,5 +1,5 @@
 if(!gas_util) {
-  gas_util = {};
+  var gas_util = {};
 }
 function getListFromSheet(sheetName) {
   var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();

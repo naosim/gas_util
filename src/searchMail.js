@@ -1,5 +1,5 @@
 if(!gas_util) {
-  gas_util = {};
+  var gas_util = {};
 }
 function searchMail(searchText) {
   var numMail = 500;// 1度に取得するメール数
