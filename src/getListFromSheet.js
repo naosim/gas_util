@@ -1,9 +1,12 @@
+if(!gas_util) {
+  gas_util = {};
+}
 function getListFromSheet(sheetName) {
   var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = spreadsheet.getSheetByName(sheetName);
   var range = sheet.getDataRange();
   var map = range.getValues();
-  
+
   var header = map[0];
   var ary = [];
   for(var row = 1; row < map.length; row++) {
@@ -15,3 +18,4 @@ function getListFromSheet(sheetName) {
   }
   return ary;
 }
+gas_util.getListFromSheet = getListFromSheet;

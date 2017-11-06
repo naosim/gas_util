@@ -1,3 +1,6 @@
+if(!gas_util) {
+  gas_util = {};
+}
 function createChatworkClient(token) {
   var header = {'X-ChatWorkToken' : token };
   return {
@@ -28,3 +31,4 @@ function createChatworkClient(token) {
     }
   }
 }
+gas_util.createChatworkClient = createChatworkClient;
