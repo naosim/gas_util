@@ -15,9 +15,13 @@ function createDate(yyyymmdd, h) {
   .map(function(v) { return v.setHours(h ? parseInt(h) : 0); })
   .map(function(v) { return new Date(v); })[0];
 }
+function zerofil2(num) {
+  return ('00' + num).slice(-2);
+}
 
 gas_util.formatDate = formatDate;
 gas_util.createDate = createDate;
+gas_util.zerofil2 = zerofil2;
 if(!gas_util) {
   var gas_util = {};
 }
