@@ -94,10 +94,14 @@ function searchMail(searchText) {
     .map(function(v){ return v[v.length - 1] })
     .map(function(v){
       return {
+        id: v.getId(),
         date: v.getDate(),
         subject: v.getSubject(),
         body: v.getPlainBody()
       };
+    })
+    .sort(function(a, b) {// 日付の昇順
+      return a.date.getTime() - b.date.getTime();
     });
 }
 gas_util.searchMail = searchMail;
