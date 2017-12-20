@@ -1,99 +1,173 @@
-function SheetTable(sheetName) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
-  var headers = sheet
-    .getDataRange()
-    .getValues()[0];
-  var headersIndexMap = headers.reduce(function(memo, key, i){
-      memo[key] = i;
-      return memo;
-    }, {});
-  
-  var compare = function(a, b, args, i) {
-    i = i || 0;
-    var key = args[i];
-    if(a[key] < b[key]) {
-      return -1;
-    }
-    if(a[key] > b[key]) {
-      return 1;
-    }
-    if(i < args.length) {
-      return compare(a, b, args, i + 1);
-    }
-    return 0;
+if(!gas_util) {
+  var gas_util = {};
+}
+function formatDate(date) {
+  return Utilities.formatDate(date, "JST", "yyyy-MM-dd HH:mm:ss");
+}
+
+function createDate(yyyymmdd, h) {
+  yyyymmdd = yyyymmdd.trim().split('/').join('-');
+  if(yyyymmdd.length == 8) {
+    yyyymmdd = yyyymmdd.slice(0, 4) + '-' + yyyymmdd.slice(4, 6) + '-' + yyyymmdd.slice(6, 8);
   }
-  
-  var findAll = function(/* sortKeys */) {
-    var records = sheet
-      .getDataRange()
-      .getValues()
-      .slice(1)
-      .map(function(values){
-        return values.reduce(function(memo, v, i){
-          memo[headers[i]] = v;
-          return memo;
-        },{});
-      });
-    
-    if(arguments.length == 0) {
-      return records;
+  return [yyyymmdd]
+  .map(function(v) { return new Date(v); })
+  .map(function(v) { return v.setHours(h ? parseInt(h) : 0); })
+  .map(function(v) { return new Date(v); })[0];
+}
+function zerofil2(num) {
+  return ('00' + num).slice(-2);
+}
+
+function createDateBuilder(dateOption) {
+  var date = dateOption ? new Date(dateOption.getTime()) : new Date();
+  var result = {
+    year: function(v) {
+      date.setYear(v);
+      return createDateBuilder(date);
+    },
+    addYear: function(v) {
+      return result.year(date.getFullYear() + v);
+    },
+    month: function(v) {// 0オリジン
+      date.setMonth(v);
+      return createDateBuilder(date);
+    },
+    addMonth: function(v) {
+      return result.month(date.getMonth() + v);
+    },
+    date: function(v) {
+      date.setDate(v);
+      return createDateBuilder(date);
+    },
+    addDate: function(v) {
+      return result.date(date.getDate() + v);
+    },
+    hours: function(v) {
+      date.setHours(v);
+      return createDateBuilder(date);
+    },
+    addHours: function(v) {
+      return result.hours(date.getHours() + v);
+    },
+    minutes: function(v) {
+      date.setMinutes(v);
+      return createDateBuilder(date);
+    },
+    addMinutes: function(v) {
+      return result.minutes(date.getMinutes() + v);
+    },
+    seconds: function(v) {
+      date.setSeconds(v);
+      return createDateBuilder(date);
+    },
+    addSeconds: function(v) {
+      return result.seconds(date.getSeconds() + v);
+    },
+    milliseconds: function(v) {
+      date.setMilliseconds(v);
+      return createDateBuilder(date);
+    },
+    addMilliseconds: function(v) {
+      return result.milliseconds(date.getMilliseconds() + v);
+    },
+    zeroTime: function() {
+      return result.hours(0).minutes(0).seconds(0).milliseconds(0);
+    },
+    lastOfMonth: function() {
+      return result.addMonth(1).date(1).zeroTime().addMilliseconds(-1);
+    },
+    build: function() {
+      return date;
     }
-    
-    var args = arguments;
-    records.sort(function(a, b){
-      return compare(a, b, args);
-    })
-    
-    return records;
   };
-  
-  var insert = function(obj) {
-    var values = headers.map(function(){ return null; });
-    Object.keys(obj).forEach(function(key){
-      var i = headersIndexMap[key];
-      if(i === undefined) {
-        throw new Error('column not found: ' + key);
-      }
-      values[i] = obj[key];
-    });
-    sheet.appendRow(values);
-  };
-  
-  var remove = function(returnTrueIfDelete) {
-    var list = findAll().reverse();
-    list.forEach(function(v, i){
-      if(returnTrueIfDelete(v)) {
-        var row = (list.length - i - 1) + 2;
-        Logger.log(row);
-        sheet.deleteRow(row);
-      }
-    });
+  return result;
+}
+
+gas_util.formatDate = formatDate;
+gas_util.createDate = createDate;
+gas_util.zerofil2 = zerofil2;
+gas_util.createDateBuilder = createDateBuilder;
+if(!gas_util) {
+  var gas_util = {};
+}
+function getListFromSheet(sheetName) {
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = spreadsheet.getSheetByName(sheetName);
+  var range = sheet.getDataRange();
+  var map = range.getValues();
+
+  var header = map[0];
+  var ary = [];
+  for(var row = 1; row < map.length; row++) {
+    var obj = {};
+    for(var clm = 0; clm < map[0].length; clm++) {
+      obj[header[clm].trim()] = map[row][clm];
+    }
+    ary.push(obj);
   }
-  
-  var update = function(filter, getter) {
-    findAll().map(function(v, i){
-      if(!filter(v)) {
-        return null;
-      }
-      return [v, i];
-    })
-    .filter(function(v) { return v })
-    .forEach(function(v) {
-      var row = v[1] + 2;
-      var value = getter(v[0]);
-      Object.keys(value).forEach(function(k){
-        var column = headersIndexMap[k] + 1;
-        sheet.getRange(row, column).setValue(value[k]);
-      });
-      
-    })
-  }
-  
-  // export
+  return ary;
+}
+function getMapFromSheet(sheetName, pkey) {
+  return getListFromSheet(sheetName).reduce(function(memo, v) {
+    memo[v[pkey]] = v;
+    return memo;
+  }, {});
+}
+
+gas_util.getListFromSheet = getListFromSheet;
+gas_util.getMapFromSheet = getMapFromSheet;
+if(!gas_util) {
+  var gas_util = {};
+}
+function createChatworkClient(token) {
+  var header = {'X-ChatWorkToken' : token };
   return {
-    findAll: findAll,
-    insert: insert,
-    remove: remove,
-    update: update
+    postMessage: function(roomId, message) {
+      var url = "https://api.chatwork.com/v2/rooms/" + roomId + "/messages";
+      var payload = {
+        'body': message
+      };
+      var options = {
+        'method': 'post',
+        'headers': header,
+        'payload': payload
+      };
+      UrlFetchApp.fetch(url, options);
+    },
+    addTask: function(roomId, message, toId) {
+      var url = 'https://api.chatwork.com/v2/rooms/' + roomId + '/tasks';
+      var payload = {
+        'body': message,
+        'to_ids': toId
+      };
+      var options = {
+        'method': 'post',
+        'headers': header,
+        'payload': payload
+      };
+      UrlFetchApp.fetch(url, options);
+    }
   }
 }
+gas_util.createChatworkClient = createChatworkClient;
+if(!gas_util) {
+  var gas_util = {};
+}
+function searchMail(searchText) {
+  var numMail = 500;// 1度に取得するメール数
+  return GmailApp.getMessagesForThreads(GmailApp.search(searchText, 0, numMail))
+    .map(function(v){ return v[v.length - 1] })
+    .map(function(v){
+      return {
+        id: v.getId(),
+        date: v.getDate(),
+        subject: v.getSubject(),
+        body: v.getPlainBody()
+      };
+    })
+    .sort(function(a, b) {// 日付の昇順
+      return a.date.getTime() - b.date.getTime();
+    });
+}
+gas_util.searchMail = searchMail;
